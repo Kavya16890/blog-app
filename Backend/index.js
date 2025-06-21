@@ -7,14 +7,22 @@ const User = require("./model/User");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const cookieParser = require("cookie-parser");
-const auth = require('./middleware/auth')
-app.use(cookieParser())
-
+const auth = require("./middleware/auth");
+app.use(cookieParser());
 
 DBConnect();
 
 app.get("/", (req, res) => {
   res.send("Hello World");
+});
+
+app.get("/allusers", async (req, res) => {
+  try {
+    const user = await User.find();
+    res.status(201).json({ users: user });
+  } catch (err) {
+    res.status(500).json({ Error: "internal server error" });
+  }
 });
 
 app.post("/signup", async (req, res) => {
@@ -32,10 +40,10 @@ app.post("/signup", async (req, res) => {
       email: email,
       password: hashedPassword,
     });
-    res.cookie('token', token, {
-        httpOnly: true,
-        secure: true
-    })
+    res.cookie("token", token, {
+      httpOnly: true,
+      secure: true,
+    });
     await user.save();
     res.status(201).json({ user: user, Token: token });
   } catch (err) {
@@ -43,9 +51,34 @@ app.post("/signup", async (req, res) => {
   }
 });
 
-app.get('/protected', auth , async (req, res)=>{
-     res.send(`welcome ${req.user.id}`)
-})
+app.post("/login", async (req, res) => {
+  const { email, password } = req.body;
+
+  if (!email || !password) {
+    return res.status(401).send("credentials are required");
+  }
+
+  try {
+    const user = await User.findOne({ email });
+    if (!user) {
+      return res.status(401).json({ error: "Email or Password Wrong" });
+    }
+
+    const isMatch = bcrypt.compare(password, user.password);
+    if (!isMatch) {
+      return res.status(401).json({ Error: "Wrong password" });
+    }
+    res
+      .status(201)
+      .json({ name: user.name, email: user.email, password: user.password });
+  } catch (err) {
+    res.status(500).json({ Error: "internal server error" });
+  }
+});
+
+app.get("/protected", auth, (req, res) => {
+  res.send(`welcome ${req.user.email}`);
+});
 
 app.listen(process.env.PORT, () => {
   console.log("Server is running");
