@@ -3,6 +3,8 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 
 const Login = () => {
+  const [errorMessage, setErrorMessage] = useState("");
+  const [successMessage, setSuccessMessage] = useState("");
   const navigate = useNavigate();
   const [formData, setFormData] = useState({
     name: "",
@@ -27,10 +29,15 @@ const Login = () => {
       });
       const data = await res.json();
       if (!res.ok) {
-        return console.error("signup failed", data.error);
+        console.error("signup failed", data.error);
+        setErrorMessage("Login Failed");
+        return;
       }
+
       setFormData(data);
       navigate("/profile");
+      setErrorMessage('')
+      setSuccessMessage('Logged in successfully')
     } catch (err) {
       console.error("Error to create user.", err.message);
     }
@@ -86,6 +93,8 @@ const Login = () => {
                   className="block w-full rounded-md bg-white px-3 py-1.5 text-base text-gray-900 outline-1 -outline-offset-1 outline-gray-300 placeholder:text-gray-400 focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-600 sm:text-sm/6"
                 />
               </div>
+              <p className="text-sm text-red-500">{errorMessage}</p>
+              <p className="text-sm text-green-500">{successMessage}</p>
             </div>
 
             <div>
