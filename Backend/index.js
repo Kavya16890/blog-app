@@ -8,8 +8,10 @@ const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const cookieParser = require("cookie-parser");
 const auth = require("./middleware/auth");
+const cors = require('cors')
 app.use(cookieParser());
 
+app.use(cors())
 DBConnect();
 
 app.get("/", (req, res) => {
